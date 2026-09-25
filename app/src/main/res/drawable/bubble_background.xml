@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Anneau extérieur rose -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#FF007F" />
+        </shape>
+    </item>
+    <!-- Anneau blanc -->
+    <item android:top="6dp" android:bottom="6dp" android:start="6dp" android:end="6dp">
+        <shape android:shape="oval">
+            <solid android:color="#00000000" />
+            <stroke android:width="2dp" android:color="#FFFFFF" />
+        </shape>
+    </item>
+    <!-- Centre cyan -->
+    <item android:top="20dp" android:bottom="20dp" android:start="20dp" android:end="20dp">
+        <shape android:shape="oval">
+            <solid android:color="#00F0FF" />
+        </shape>
+    </item>
+</layer-list>

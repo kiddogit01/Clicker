@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="kiddo_bg">#0D0E15</color>
+    <color name="kiddo_card">#1A1B26</color>
+    <color name="kiddo_pink">#FF007F</color>
+    <color name="kiddo_cyan">#00F0FF</color>
+    <color name="kiddo_green">#00FF88</color>
+    <color name="kiddo_muted">#8A8B9C</color>
+    <color name="kiddo_white">#FFFFFF</color>
+</resources>

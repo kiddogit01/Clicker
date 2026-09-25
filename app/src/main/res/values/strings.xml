@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Kiddo Auto Tapper</string>
+    <string name="accessibility_service_description">Autorise Kiddo Auto Tapper à simuler des appuis automatiques à l\'emplacement que tu choisis avec la bulle flottante.</string>
+</resources>

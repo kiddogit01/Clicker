@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Anneau extérieur blanc -->
+    <path
+        android:pathData="M54,24 A30,30 0 1,1 54,84 A30,30 0 1,1 54,24 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:fillColor="#00000000" />
+
+    <!-- Petites amorces de réticule -->
+    <path
+        android:pathData="M54,14 L54,22"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5" />
+    <path
+        android:pathData="M54,86 L54,94"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5" />
+    <path
+        android:pathData="M14,54 L22,54"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5" />
+    <path
+        android:pathData="M86,54 L94,54"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5" />
+
+    <!-- Centre cyan -->
+    <path
+        android:pathData="M54,42 A12,12 0 1,1 54,66 A12,12 0 1,1 54,42 Z"
+        android:fillColor="#00F0FF" />
+</vector>

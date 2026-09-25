@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/step_card_background"
+    android:padding="8dp"
+    android:elevation="12dp"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/dragHandle"
+        android:layout_width="34dp"
+        android:layout_height="46dp"
+        android:gravity="center"
+        android:text="✥"
+        android:textSize="20sp"
+        android:textColor="@color/kiddo_muted"
+        android:layout_marginEnd="6dp" />
+
+    <LinearLayout
+        android:id="@+id/panelButtons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <Button
+            android:id="@+id/btnToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="46dp"
+            android:minWidth="0dp"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:text="▶ Démarrer"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:textColor="#0D0E15"
+            android:backgroundTint="@color/kiddo_cyan"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnQuit"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:minWidth="0dp"
+            android:padding="0dp"
+            android:text="✕"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:textColor="@color/kiddo_white"
+            android:backgroundTint="#FF4444" />
+    </LinearLayout>
+</LinearLayout>
