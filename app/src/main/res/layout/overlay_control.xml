@@ -1,28 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.kiddo.autotapper.DraggableToolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/toolbarRoot"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:background="@drawable/step_card_background"
-    android:padding="8dp"
-    android:elevation="12dp"
-    android:gravity="center_vertical">
-
-    <TextView
-        android:id="@+id/dragHandle"
-        android:layout_width="34dp"
-        android:layout_height="46dp"
-        android:gravity="center"
-        android:text="✥"
-        android:textSize="20sp"
-        android:textColor="@color/kiddo_muted"
-        android:layout_marginEnd="6dp" />
+    android:orientation="horizontal">
 
     <LinearLayout
-        android:id="@+id/panelButtons"
+        android:id="@+id/expandedRow"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:background="@drawable/step_card_background"
+        android:padding="8dp"
+        android:elevation="12dp"
         android:gravity="center_vertical">
 
         <Button
@@ -37,7 +27,7 @@
             android:textStyle="bold"
             android:textSize="14sp"
             android:textColor="#0D0E15"
-            android:backgroundTint="@color/kiddo_cyan"
+            android:backgroundTint="@color/kiddo_green"
             android:layout_marginEnd="8dp" />
 
         <Button
@@ -51,5 +41,19 @@
             android:textStyle="bold"
             android:textColor="@color/kiddo_white"
             android:backgroundTint="#FF4444" />
+
     </LinearLayout>
-</LinearLayout>
+
+    <TextView
+        android:id="@+id/collapsedStrip"
+        android:layout_width="22dp"
+        android:layout_height="64dp"
+        android:background="@drawable/collapsed_strip_bg"
+        android:gravity="center"
+        android:text="⋮"
+        android:textColor="@color/kiddo_white"
+        android:textStyle="bold"
+        android:elevation="12dp"
+        android:visibility="gone" />
+
+</com.kiddo.autotapper.DraggableToolbar>

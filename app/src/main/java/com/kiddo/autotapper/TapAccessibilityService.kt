@@ -17,6 +17,7 @@ class TapAccessibilityService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var isTapping = false
+    private var isDispatching = false
     private var tapX = 0f
     private var tapY = 0f
     private var intervalMs = 50L
@@ -24,7 +25,10 @@ class TapAccessibilityService : AccessibilityService() {
     private val tapRunnable = object : Runnable {
         override fun run() {
             if (!isTapping) return
-            performTap(tapX, tapY)
+            // On ne lance un nouveau tap que si le précédent est bien terminé.
+            // Sans ça, les taps s'empilent en attente et ça crée un délai qui
+            // grandit au fil du temps, façon "application figée".
+            if (!isDispatching) performTap(tapX, tapY)
             handler.postDelayed(this, intervalMs)
         }
     }
@@ -47,14 +51,12 @@ class TapAccessibilityService : AccessibilityService() {
         intervalMs = interval.coerceAtLeast(MIN_INTERVAL_MS)
         if (isTapping) return
         isTapping = true
-        // Premier geste immédiatement, sans attendre un cycle d'intervalle.
-        performTap(tapX, tapY)
-        handler.removeCallbacks(tapRunnable)
-        handler.postDelayed(tapRunnable, intervalMs)
+        handler.post(tapRunnable)
     }
 
     fun stopTapping() {
         isTapping = false
+        isDispatching = false
         handler.removeCallbacks(tapRunnable)
     }
 
@@ -69,7 +71,17 @@ class TapAccessibilityService : AccessibilityService() {
         val path = Path().apply { moveTo(x, y) }
         val stroke = GestureDescription.StrokeDescription(path, 0L, 40L)
         val gesture = GestureDescription.Builder().addStroke(stroke).build()
-        dispatchGesture(gesture, null, null)
+
+        isDispatching = true
+        val accepted = dispatchGesture(gesture, object : GestureResultCallback() {
+            override fun onCompleted(gestureDescription: GestureDescription?) {
+                isDispatching = false
+            }
+            override fun onCancelled(gestureDescription: GestureDescription?) {
+                isDispatching = false
+            }
+        }, null)
+        if (!accepted) isDispatching = false
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {

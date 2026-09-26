@@ -24,6 +24,10 @@
             android:name=".ConfigActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
+
         <!-- Service simple (pas de premier plan / notification) : ajoute juste
              la fenêtre flottante via WindowManager, ne demande que
              SYSTEM_ALERT_WINDOW -->

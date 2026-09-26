@@ -75,32 +75,6 @@
         </LinearLayout>
     </LinearLayout>
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Cible de tapotage"
-        android:textColor="@color/kiddo_white"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="8dp" />
-
-    <RadioButton
-        android:id="@+id/rbFinger"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="👆🏽 Doigt"
-        android:textColor="@color/kiddo_white"
-        android:buttonTint="@color/kiddo_cyan" />
-
-    <RadioButton
-        android:id="@+id/rbCircle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="⊕ Réticule circulaire"
-        android:textColor="@color/kiddo_white"
-        android:buttonTint="@color/kiddo_cyan"
-        android:layout_marginBottom="12dp" />
-
     <Button
         android:id="@+id/btnToggleTapper"
         android:layout_width="match_parent"
@@ -122,5 +96,15 @@
         android:gravity="center"
         android:lineSpacingExtra="4dp"
         android:text="Deux éléments vont apparaître par-dessus tes autres apps : un rond (la cible, à glisser où tu veux taper) et une barre séparée (Démarrer/Arrêter, position fixe)." />
+
+    <Button
+        android:id="@+id/btnSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="⚙️ Style de la cible"
+        android:textAllCaps="false"
+        android:textColor="@color/kiddo_muted"
+        android:background="@android:color/transparent" />
 
 </LinearLayout>
