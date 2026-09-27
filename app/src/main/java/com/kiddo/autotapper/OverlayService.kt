@@ -21,23 +21,25 @@ class OverlayService : Service() {
     private lateinit var controlView: View
     private lateinit var targetParams: WindowManager.LayoutParams
     private lateinit var controlParams: WindowManager.LayoutParams
-    private var startInterval: Long = 50L
+    private var startInterval: Long = TapAccessibilityService.RECOMMENDED_INTERVAL_MS
     private var collapsed = false
     private var controlWidthExpanded = 0
     private var controlWidthCollapsed = 0
+    private var overlaysReady = false
 
-    // Position du point de tap dans la cible (ratio largeur/hauteur de la vue).
-    // Doigt : proche du haut (bout du doigt). Cercle : exactement au centre.
     private var fingertipXRatio = 0.5f
     private var fingertipYRatio = 0.22f
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startInterval = intent?.getLongExtra("interval", 50L) ?: 50L
-        if (!::targetView.isInitialized) {
-            initOverlay()
-        }
+        startInterval = intent?.getLongExtra("interval", TapAccessibilityService.RECOMMENDED_INTERVAL_MS)
+            ?: TapAccessibilityService.RECOMMENDED_INTERVAL_MS
+        // On repart toujours d'une base propre : si l'utilisateur a changé le
+        // style de cible dans les réglages entre-temps, ça doit se voir
+        // immédiatement au prochain lancement, pas rester bloqué sur l'ancien.
+        teardownOverlays()
+        initOverlay()
         return START_STICKY
     }
 
@@ -46,6 +48,7 @@ class OverlayService : Service() {
             windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
             setupTarget()
             setupControl()
+            overlaysReady = true
             Toast.makeText(this, "👆 Glisse la cible, puis appuie sur Démarrer", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
             Toast.makeText(this, "❌ Erreur : " + (e.message ?: e.toString()), Toast.LENGTH_LONG).show()
@@ -53,11 +56,17 @@ class OverlayService : Service() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    private fun teardownOverlays() {
+        if (!overlaysReady) return
         TapAccessibilityService.instance?.stopTapping()
         if (::targetView.isInitialized) { try { windowManager.removeView(targetView) } catch (_: Exception) {} }
         if (::controlView.isInitialized) { try { windowManager.removeView(controlView) } catch (_: Exception) {} }
+        overlaysReady = false
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        teardownOverlays()
     }
 
     private fun overlayType(): Int =
@@ -102,6 +111,10 @@ class OverlayService : Service() {
         targetView.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    // Coupe le tapotage le temps du glissement : dispatchGesture()
+                    // annule sinon ce geste en cours de route (comportement
+                    // documenté par Android, pas un bug de l'app).
+                    TapAccessibilityService.instance?.setUserInteracting(true)
                     initialX = targetParams.x; initialY = targetParams.y
                     initialTouchX = event.rawX; initialTouchY = event.rawY
                     true
@@ -111,6 +124,10 @@ class OverlayService : Service() {
                     targetParams.y = initialY + (event.rawY - initialTouchY).toInt()
                     windowManager.updateViewLayout(targetView, targetParams)
                     TapAccessibilityService.instance?.updatePosition(fingertipX(), fingertipY())
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    TapAccessibilityService.instance?.setUserInteracting(false)
                     true
                 }
                 else -> false
@@ -142,7 +159,6 @@ class OverlayService : Service() {
         val btnToggle = controlView.findViewById<Button>(R.id.btnToggle)
         val btnQuit = controlView.findViewById<Button>(R.id.btnQuit)
 
-        // Mesure la largeur réelle une fois posée, pour un repli précis en bordure.
         controlView.post {
             controlWidthExpanded = expandedRow.width
             controlWidthCollapsed = collapsedStrip.layoutParams.width
@@ -165,12 +181,15 @@ class OverlayService : Service() {
 
         collapsedStrip.setOnClickListener { expand() }
 
+        // Même principe que pour la cible : pas de tap auto pendant le glissement.
+        toolbar.onDragStart = { TapAccessibilityService.instance?.setUserInteracting(true) }
         toolbar.onDrag = { dx, dy ->
             controlParams.x += dx
             controlParams.y += dy
             windowManager.updateViewLayout(controlView, controlParams)
         }
         toolbar.onDragEnd = {
+            TapAccessibilityService.instance?.setUserInteracting(false)
             if (!collapsed) {
                 val w = if (controlWidthExpanded > 0) controlWidthExpanded else 200
                 val edgeMargin = 60

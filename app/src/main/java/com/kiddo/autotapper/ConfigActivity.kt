@@ -34,7 +34,7 @@ class ConfigActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val interval = etInterval.text.toString().toLongOrNull()?.coerceAtLeast(20L) ?: 50L
+            val interval = etInterval.text.toString().toLongOrNull()?.coerceAtLeast(50L) ?: 100L
             val intent = Intent(this, OverlayService::class.java).apply {
                 putExtra("interval", interval)
             }

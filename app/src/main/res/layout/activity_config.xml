@@ -43,7 +43,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Minimum réaliste : 20 ms"
+            android:text="Minimum : 50 ms — 100 ms recommandé"
             android:textColor="@color/kiddo_muted"
             android:textSize="11sp"
             android:layout_marginBottom="12dp" />
@@ -60,7 +60,7 @@
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:inputType="number"
-                android:text="50"
+                android:text="100"
                 android:textColor="@color/kiddo_white"
                 android:background="#2A2B3A"
                 android:paddingStart="14dp"
@@ -106,5 +106,13 @@
         android:textAllCaps="false"
         android:textColor="@color/kiddo_muted"
         android:background="@android:color/transparent" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="KidCliker - ❖GAME Lv-UP ©2026"
+        android:textColor="#4A4B5A"
+        android:textSize="10sp" />
 
 </LinearLayout>
