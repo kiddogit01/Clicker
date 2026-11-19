@@ -26,6 +26,21 @@ jobs:
         with:
           gradle-version: '8.6'
 
+      - name: Keystore stable (mises à jour compatibles entre builds)
+        run: |
+          if [ ! -f keystore/debug.keystore ]; then
+            mkdir -p keystore
+            keytool -genkeypair -keystore keystore/debug.keystore -alias kidcli \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass kidcli2026 -keypass kidcli2026 \
+              -dname "CN=KidCliker, OU=Gamelvup, O=GAME Lv-UP, C=CI"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add keystore/debug.keystore
+            git commit -m "keystore: cle de signature stable pour les mises a jour" || true
+            git push origin "HEAD:${{ github.ref }}" || true
+          fi
+
       - name: Compiler l'APK (version debug, installable directement)
         run: |
           set -o pipefail

@@ -1,14 +1,14 @@
 package com.kiddo.autotapper
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Button
-import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import kotlin.math.roundToInt
 
 class ConfigActivity : AppCompatActivity() {
 
@@ -36,7 +36,6 @@ class ConfigActivity : AppCompatActivity() {
 
         listOf<Button>(findViewById(R.id.btnToggleTapper), btnBattery, findViewById(R.id.btnSettings))
             .forEach { it.clearTint(); AnimKit.press(it) }
-        AnimKit.press(findViewById(R.id.btnBack))
 
         // --- Interval : valeur mémorisée (plus besoin de re-taper à chaque lancement) ---
         val savedMs = prefs.getLong("interval_ms", 100L).toInt().coerceIn(MIN_MS, MAX_MS)
@@ -68,7 +67,9 @@ class ConfigActivity : AppCompatActivity() {
         })
         syncIntervalUi(pop = false)
 
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finishWithAnim() }
+        // ===== Suivez-nous (liens de gamelvup.com) =====
+        setupSocialLinks()
+
         btnBattery.setOnClickListener {
             startActivity(
                 Intent(
@@ -142,6 +143,28 @@ class ConfigActivity : AppCompatActivity() {
         AnimKit.pop(findViewById(R.id.btnToggleTapper), 0.95f)
     }
 
+    private fun setupSocialLinks() {
+        val links = mapOf(
+            R.id.socialTikTok to "https://www.tiktok.com/@gamelvup",
+            R.id.socialYouTube to "https://youtube.com/@gamelvup",
+            R.id.socialFacebook to "https://www.facebook.com/share/1J7gQ8uUoX/",
+            R.id.socialWhatsApp to "https://whatsapp.com/channel/0029VbDwIGTDp2Q1EuJ0131j"
+        )
+        links.forEach { (viewId, url) ->
+            val view = findViewById<LinearLayout>(viewId)
+            AnimKit.press(view, 0.94f)
+            view.setOnClickListener { openUrl(url) }
+        }
+    }
+
+    private fun openUrl(url: String) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        } catch (e: Exception) {
+            toast("⚠️ Impossible d'ouvrir le lien")
+        }
+    }
+
     private fun playEntranceAnimation() {
         AnimKit.enter(findViewById(R.id.topBar), 0, -24f)
         AnimKit.enter(findViewById(R.id.cardInterval), 110)
@@ -150,11 +173,8 @@ class ConfigActivity : AppCompatActivity() {
         AnimKit.fadeIn(tvConfigStatus, 450)
         AnimKit.fadeIn(findViewById(R.id.btnSettings), 520)
         AnimKit.fadeIn(findViewById(R.id.tvIntervalValue), 260)
-    }
-
-    private fun finishWithAnim() {
-        finish()
-        overridePendingTransition(R.anim.fade_in, R.anim.slide_out_left)
+        AnimKit.fadeIn(findViewById(R.id.suivezTitle), 580)
+        AnimKit.enter(findViewById(R.id.suivezRow), 640, 28f)
     }
 
     private fun toast(msg: String) =

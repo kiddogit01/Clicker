@@ -49,7 +49,6 @@ class OverlayService : Service() {
     private var fingertipYRatio = 0.22f
 
     private val handler = Handler(Looper.getMainLooper())
-    private var pulseAnimator: ValueAnimator? = null
     private var togglePulse: ValueAnimator? = null
     private var snapAnimator: ValueAnimator? = null
 
@@ -90,7 +89,6 @@ class OverlayService : Service() {
             setupControl()
             overlaysReady = true
             animateEntrance()
-            startTargetPulse()
             handler.postDelayed(refreshRunnable, REFRESH_PERIOD_MS)
             Toast.makeText(
                 this, "👆 Glisse la cible, puis appuie sur Démarrer",
@@ -110,7 +108,6 @@ class OverlayService : Service() {
 
     private fun teardownOverlays() {
         handler.removeCallbacks(refreshRunnable)
-        pulseAnimator?.cancel(); pulseAnimator = null
         togglePulse?.cancel(); togglePulse = null
         snapAnimator?.cancel(); snapAnimator = null
 
@@ -173,25 +170,6 @@ class OverlayService : Service() {
         }
     }
 
-    /** Halo qui respire autour de la cible. */
-    private fun startTargetPulse() {
-        val ring = targetView?.findViewById<View>(R.id.pulseRing) ?: return
-        val anim = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 1500
-            repeatMode = ValueAnimator.REVERSE
-            repeatCount = ValueAnimator.INFINITE
-            interpolator = AccelerateDecelerateInterpolator()
-            addUpdateListener { a ->
-                val t = a.animatedValue as Float
-                val s = 1f + 0.38f * t
-                ring.scaleX = s; ring.scaleY = s
-                ring.alpha = 0.85f * (1f - t)
-            }
-        }
-        pulseAnimator = anim
-        anim.start()
-    }
-
     /** Translation horizontale animée de la barre (aimantation aux bords). */
     private fun animateControlX(toX: Int) {
         val params = controlParams ?: return
@@ -247,26 +225,50 @@ class OverlayService : Service() {
 
         var initialX = 0; var initialY = 0
         var initialTouchX = 0f; var initialTouchY = 0f
+        var activePointerId = MotionEvent.INVALID_POINTER_ID
 
         view.setOnTouchListener { _, event ->
-            when (event.action) {
+            when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     // Coupe le tapotage le temps du glissement : dispatchGesture()
                     // annule sinon ce geste en cours de route (comportement
                     // documenté par Android, pas un bug de l'app).
                     TapAccessibilityService.instance?.setUserInteracting(true)
+                    activePointerId = event.getPointerId(0)
                     initialX = params.x; initialY = params.y
                     initialTouchX = event.rawX; initialTouchY = event.rawY
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    params.x = initialX + (event.rawX - initialTouchX).toInt()
-                    params.y = initialY + (event.rawY - initialTouchY).toInt()
+                    val idx = event.findPointerIndex(activePointerId)
+                    if (idx < 0) return@setOnTouchListener true
+                    // Glissement sur les DEUX axes (X et Y), puis on garde la
+                    // cible entièrement visible à l'écran.
+                    val newX = initialX + (event.rawX - initialTouchX).toInt()
+                    val newY = initialY + (event.rawY - initialTouchY).toInt()
+                    val vw = if (view.width > 0) view.width else dp(76)
+                    val vh = if (view.height > 0) view.height else dp(76)
+                    params.x = newX.coerceIn(-vw / 2, metrics.widthPixels - vw / 2)
+                    params.y = newY.coerceIn(-vh / 2, metrics.heightPixels - vh / 2)
                     try { windowManager.updateViewLayout(view, params) } catch (_: Exception) {}
                     TapAccessibilityService.instance?.updatePosition(fingertipX(), fingertipY())
                     true
                 }
+                MotionEvent.ACTION_POINTER_DOWN -> true // 2e doigt : on ignore
+                MotionEvent.ACTION_POINTER_UP -> {
+                    // Le doigt qui track se lève → on termine proprement
+                    if (event.getPointerId(event.actionIndex) == activePointerId) {
+                        activePointerId = MotionEvent.INVALID_POINTER_ID
+                        TapAccessibilityService.instance?.setUserInteracting(false)
+                        prefs.edit()
+                            .putInt("target_x", params.x)
+                            .putInt("target_y", params.y)
+                            .apply()
+                    }
+                    true
+                }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    activePointerId = MotionEvent.INVALID_POINTER_ID
                     TapAccessibilityService.instance?.setUserInteracting(false)
                     // Mémorise la position pour le prochain lancement
                     prefs.edit()
@@ -275,7 +277,7 @@ class OverlayService : Service() {
                         .apply()
                     true
                 }
-                else -> false
+                else -> true
             }
         }
     }
@@ -361,6 +363,14 @@ class OverlayService : Service() {
         }
 
         collapsedStrip.setOnClickListener { expand() }
+
+        // Les trois petits points (⋮) : un tap replie la barre dans le bord
+        // le plus proche (glisser depuis la poignée continue de marcher).
+        view.findViewById<View>(R.id.dragHandle).setOnClickListener {
+            val w = if (controlWidthExpanded > 0) controlWidthExpanded else view.width
+            val centerX = (controlParams?.x ?: 0) + w / 2
+            collapseToEdge(centerX < metrics.widthPixels / 2)
+        }
 
         // Même principe que pour la cible : pas de tap auto pendant le glissement.
         toolbar.onDragStart = {

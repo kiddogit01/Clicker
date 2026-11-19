@@ -3,13 +3,6 @@
     android:layout_width="68dp"
     android:layout_height="68dp">
 
-    <!-- Halo qui respire autour de la cible (animé par OverlayService) -->
-    <View
-        android:id="@+id/pulseRing"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/pulse_ring_bg" />
-
     <ImageView
         android:layout_width="60dp"
         android:layout_height="60dp"
