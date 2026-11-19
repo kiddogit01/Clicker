@@ -26,13 +26,36 @@ jobs:
       - name: Compiler l'APK (version debug, installable directement)
         run: |
           set -o pipefail
-          gradle assembleDebug 2>&1 | tee build.log
+          gradle assembleDebug --console=plain 2>&1 | tee build.log
 
-      - name: Afficher le log en cas d'erreur
+      - name: Remonter l'erreur de compilation
         if: failure()
         run: |
+          python3 - <<'PY'
+          import pathlib, re
+          p = pathlib.Path('build.log')
+          log = p.read_text(errors='replace') if p.exists() else 'build.log introuvable'
+          lines = log.splitlines()
+          # 1) section "What went wrong" de Gradle
+          idx = next((i for i, l in enumerate(lines) if 'What went wrong' in l), None)
+          chunks = []
+          if idx is not None:
+              chunks.append('\n'.join(lines[idx:idx + 40]))
+          # 2) premières erreurs Kotlin / AAPT / task
+          pat = re.compile(r'(^e: |error:|FAILURE:|Execution failed for task|Caused by:|AAPT)')
+          errs = [l.strip() for l in lines if pat.search(l)][:15]
+          if errs:
+              chunks.append('\n'.join(errs))
+          # 3) dernier recours : fin du log
+          if not chunks:
+              chunks.append('\n'.join(lines[-40:]))
+          chunk = chunks[0] + ('\n---\n' + chunks[1] if len(chunks) > 1 and chunks[1] else '')
+          chunk = chunk.replace('\r', '')[:4000]
+          msg = chunk.replace('\n', '%0A').replace('::', '⁚')
+          print(f'::error title=Compilation échouée::{msg}')
+          PY
           {
-            echo '## ❌ Log de compilation (taille limitée)'
+            echo '## ❌ Log de compilation'
             echo '```'
             tail -n 150 build.log 2>/dev/null || echo 'build.log introuvable'
             echo '```'
