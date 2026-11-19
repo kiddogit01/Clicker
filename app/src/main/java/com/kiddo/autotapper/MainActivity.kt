@@ -83,14 +83,15 @@ class MainActivity : AppCompatActivity() {
         btnAccessibility.setOnClickListener {
             // API 30+ : ouvre DIRECTEMENT la page de nos services d'accessibilité
             // au lieu de la liste générale (beaucoup plus simple pour l'utilisateur).
-            if (Build.VERSION.SDK_INT >= 30) {
-                startActivity(
-                    Intent(
-                        Settings.ACTION_ACCESSIBILITY_DETAILS_SETTINGS,
-                        Uri.parse("package:$packageName")
-                    )
-                )
-            } else {
+            // L'action est testée à l'exécution (constante absente du SDK 34) avec
+            // repli sur la liste classique si le chemin n'existe pas.
+            val deepLink = Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS").apply {
+                data = Uri.parse("package:$packageName")
+            }
+            try {
+                if (Build.VERSION.SDK_INT >= 30) startActivity(deepLink)
+                else startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            } catch (e: Exception) {
                 startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
             }
         }
