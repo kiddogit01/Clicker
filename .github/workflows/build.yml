@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -66,3 +69,25 @@ jobs:
         with:
           name: KidCliker-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publier l'APK (commit branche + release de téléchargement)
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p release
+          cp app/build/outputs/apk/debug/app-debug.apk release/KidCliker-debug.apk
+          # 1) Commit sur la branche en cours (jamais sur main : pas de boucle)
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add release/KidCliker-debug.apk
+            git commit -m "APK: build ${{ github.sha }}" || true
+            git push origin "HEAD:${{ github.ref }}"
+          fi
+          # 2) Release roulante → lien de téléchargement stable pour le téléphone
+          gh release view latest-apk >/dev/null 2>&1 || \
+            gh release create latest-apk \
+              --title "KidCliker — APK de test" \
+              --notes "Build de test automatisé. Installe sur ton Android (autoriser les sources inconnues)."
+          gh release upload latest-apk release/KidCliker-debug.apk --clobber
