@@ -90,4 +90,9 @@ jobs:
             gh release create latest-apk \
               --title "KidCliker — APK de test" \
               --notes "Build de test automatisé. Installe sur ton Android (autoriser les sources inconnues)."
-          gh release upload latest-apk release/KidCliker-debug.apk --clobber
+          if ! gh release upload latest-apk release/KidCliker-debug.apk --clobber 2>upload.err; then
+            echo "::error title=Upload release échoué::$(tr '\n' ' ' < upload.err)"
+            cat upload.err
+            exit 1
+          fi
+          echo "::notice title=APK publié::https://github.com/kiddogit01/Clicker/releases/download/latest-apk/KidCliker-debug.apk"
