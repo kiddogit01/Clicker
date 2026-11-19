@@ -1,14 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="72dp"
-    android:layout_height="72dp">
+    android:layout_width="76dp"
+    android:layout_height="76dp">
+
+    <!-- Halo qui respire autour de la cible (animé par OverlayService) -->
+    <View
+        android:id="@+id/pulseRing"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/pulse_ring_bg" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="👆🏽"
-        android:textSize="52sp"
+        android:background="@drawable/target_finger_bg"
+        android:elevation="8dp"
         android:gravity="center"
-        android:elevation="8dp" />
+        android:text="👆🏽"
+        android:textSize="42sp" />
 
 </FrameLayout>

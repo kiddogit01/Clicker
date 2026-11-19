@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Kiddo" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/kiddo_bg</item>
+        <item name="android:statusBarColor">@color/kiddo_bg</item>
+        <item name="android:navigationBarColor">@color/kiddo_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:colorAccent">@color/kiddo_cyan</item>
+        <item name="colorAccent">@color/kiddo_cyan</item>
+    </style>
+</resources>

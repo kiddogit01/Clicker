@@ -1,0 +1,7 @@
+.venv/
+image-search/
+design/out/
+*.iml
+.gradle/
+local.properties
+.idea/

@@ -2,191 +2,325 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/kiddo_bg"
+    android:background="@drawable/bg_gradient"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="44dp"
+        android:paddingBottom="32dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <!-- ===== Logo + titre ===== -->
+        <ImageView
+            android:id="@+id/imgLogo"
+            android:layout_width="88dp"
+            android:layout_height="88dp"
             android:layout_gravity="center_horizontal"
-            android:text="キKiddoシ"
-            android:textColor="@color/kiddo_cyan"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.1"
-            android:layout_marginBottom="4dp" />
+            android:elevation="10dp"
+            android:src="@mipmap/ic_launcher" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="Auto Tapper"
-            android:textColor="@color/kiddo_white"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="28dp" />
-
-        <!-- Étape 1 -->
         <LinearLayout
+            android:id="@+id/titleRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
+
+            <TextView
+                android:id="@+id/tvTitleKid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kid"
+                android:textColor="@color/kiddo_white"
+                android:textSize="30sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvTitleCliker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cliker"
+                android:textColor="@color/kiddo_cyan"
+                android:textSize="30sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="6dp"
+            android:letterSpacing="0.08"
+            android:text="AUTO TAPPER · ❖GAME Lv-UP"
+            android:textColor="@color/kiddo_muted"
+            android:textSize="11sp" />
+
+        <!-- ===== Progression ===== -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:max="2"
+            android:progress="0"
+            android:progressDrawable="@drawable/progress_drawable" />
+
+        <TextView
+            android:id="@+id/tvProgressLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:text="0 / 2 autorisations requises"
+            android:textColor="@color/kiddo_muted"
+            android:textSize="12sp" />
+
+        <!-- ===== Étape 1 ===== -->
+        <LinearLayout
+            android:id="@+id/cardStep1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            android:layout_marginTop="24dp"
             android:background="@drawable/step_card_background"
-            android:padding="16dp"
-            android:layout_marginBottom="12dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp">
 
             <TextView
                 android:id="@+id/tvStep1Number"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginEnd="12dp"
                 android:background="@drawable/step_number_bg"
                 android:gravity="center"
                 android:text="1"
                 android:textColor="@color/kiddo_white"
-                android:textStyle="bold"
-                android:layout_marginEnd="14dp" />
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Affichage par-dessus les autres apps"
-                android:textColor="@color/kiddo_white"
-                android:textSize="14sp"
-                android:layout_marginEnd="10dp" />
+                android:layout_marginEnd="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Affichage par-dessus les autres apps"
+                    android:textColor="@color/kiddo_white"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Requis · affiche la cible flottante"
+                    android:textColor="@color/kiddo_muted"
+                    android:textSize="11sp" />
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnOverlayPermission"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:minHeight="0dp"
+                android:layout_height="38dp"
+                android:background="@drawable/btn_pill_cyan"
+                android:gravity="center"
                 android:minWidth="0dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:text="Activer"
                 android:textAllCaps="false"
+                android:textColor="#0D0E15"
                 android:textSize="13sp"
-                android:backgroundTint="@color/kiddo_cyan"
-                android:textColor="#0D0E15" />
+                android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Étape 2 -->
+        <!-- ===== Étape 2 ===== -->
         <LinearLayout
+            android:id="@+id/cardStep2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            android:layout_marginTop="12dp"
             android:background="@drawable/step_card_background"
-            android:padding="16dp"
-            android:layout_marginBottom="12dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp">
 
             <TextView
                 android:id="@+id/tvStep2Number"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginEnd="12dp"
                 android:background="@drawable/step_number_bg"
                 android:gravity="center"
                 android:text="2"
                 android:textColor="@color/kiddo_white"
-                android:textStyle="bold"
-                android:layout_marginEnd="14dp" />
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Service d'accessibilité"
-                android:textColor="@color/kiddo_white"
-                android:textSize="14sp"
-                android:layout_marginEnd="10dp" />
+                android:layout_marginEnd="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Service d'accessibilité"
+                    android:textColor="@color/kiddo_white"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Requis · simule les appuis automatiques"
+                    android:textColor="@color/kiddo_muted"
+                    android:textSize="11sp" />
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnAccessibilityPermission"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:minHeight="0dp"
+                android:layout_height="38dp"
+                android:background="@drawable/btn_pill_cyan"
+                android:gravity="center"
                 android:minWidth="0dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:text="Activer"
                 android:textAllCaps="false"
+                android:textColor="#0D0E15"
                 android:textSize="13sp"
-                android:backgroundTint="@color/kiddo_cyan"
-                android:textColor="#0D0E15" />
+                android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Étape 3 -->
+        <!-- ===== Étape 3 (optionnelle) ===== -->
         <LinearLayout
+            android:id="@+id/cardStep3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            android:layout_marginTop="12dp"
             android:background="@drawable/step_card_background"
-            android:padding="16dp"
-            android:layout_marginBottom="24dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp">
 
             <TextView
                 android:id="@+id/tvStep3Number"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginEnd="12dp"
                 android:background="@drawable/step_number_bg"
                 android:gravity="center"
                 android:text="3"
                 android:textColor="@color/kiddo_white"
-                android:textStyle="bold"
-                android:layout_marginEnd="14dp" />
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Ignorer l'optimisation de batterie"
-                android:textColor="@color/kiddo_white"
-                android:textSize="14sp"
-                android:layout_marginEnd="10dp" />
+                android:layout_marginEnd="10dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ignorer l'optimisation de batterie"
+                        android:textColor="@color/kiddo_white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/chip_static"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp"
+                        android:text="Optionnel"
+                        android:textColor="@color/kiddo_yellow"
+                        android:textSize="10sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Évite l'arrêt de la bulle en arrière-plan"
+                    android:textColor="@color/kiddo_muted"
+                    android:textSize="11sp" />
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnBatteryOptimization"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:minHeight="0dp"
+                android:layout_height="38dp"
+                android:background="@drawable/btn_pill_cyan"
+                android:gravity="center"
                 android:minWidth="0dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:text="Activer"
                 android:textAllCaps="false"
+                android:textColor="#0D0E15"
                 android:textSize="13sp"
-                android:backgroundTint="@color/kiddo_cyan"
-                android:textColor="#0D0E15" />
+                android:textStyle="bold" />
         </LinearLayout>
 
+        <!-- ===== Continuer ===== -->
         <Button
             android:id="@+id/btnContinue"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:text="Continuer →"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/kiddo_white"
+            android:layout_height="56dp"
+            android:layout_marginTop="26dp"
+            android:alpha="0.35"
             android:background="@drawable/btn_primary_bg"
             android:enabled="false"
-            android:alpha="0.4" />
+            android:text="Continuer  →"
+            android:textAllCaps="false"
+            android:textColor="@color/kiddo_white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:textColor="@color/kiddo_muted"
-            android:textSize="13sp"
+            android:layout_marginTop="16dp"
             android:gravity="center"
             android:lineSpacingExtra="4dp"
-            android:text="Complète les 3 étapes ci-dessus pour continuer." />
+            android:text="Complète les 2 autorisations requises pour continuer."
+            android:textColor="@color/kiddo_muted"
+            android:textSize="13sp" />
 
     </LinearLayout>
 </ScrollView>

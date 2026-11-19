@@ -3,57 +3,100 @@
     android:id="@+id/toolbarRoot"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:gravity="center_vertical"
     android:orientation="horizontal">
 
+    <!-- ===== Barre dépliée ===== -->
     <LinearLayout
         android:id="@+id/expandedRow"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@drawable/pill_bg"
+        android:elevation="14dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:background="@drawable/step_card_background"
-        android:padding="8dp"
-        android:elevation="12dp"
-        android:gravity="center_vertical">
+        android:paddingStart="10dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="6dp">
+
+        <TextView
+            android:id="@+id/tvInterval"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:background="@drawable/chip_static"
+            android:gravity="center"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:text="100 ms"
+            android:textColor="@color/kiddo_cyan"
+            android:textSize="11sp"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/btnToggle"
             android:layout_width="wrap_content"
             android:layout_height="46dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/btn_pill_green"
+            android:gravity="center"
             android:minWidth="0dp"
-            android:paddingStart="18dp"
-            android:paddingEnd="18dp"
+            android:minHeight="0dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             android:text="▶ Démarrer"
             android:textAllCaps="false"
-            android:textStyle="bold"
-            android:textSize="14sp"
             android:textColor="#0D0E15"
-            android:backgroundTint="@color/kiddo_green"
-            android:layout_marginEnd="8dp" />
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/btnQuit"
             android:layout_width="46dp"
             android:layout_height="46dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/btn_pill_red"
+            android:gravity="center"
             android:minWidth="0dp"
+            android:minHeight="0dp"
             android:padding="0dp"
             android:text="✕"
             android:textAllCaps="false"
-            android:textStyle="bold"
             android:textColor="@color/kiddo_white"
-            android:backgroundTint="#FF4444" />
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
+        <!-- Poignée de glissement (indication visuelle) -->
+        <LinearLayout
+            android:id="@+id/dragHandle"
+            android:layout_width="34dp"
+            android:layout_height="46dp"
+            android:layout_marginStart="4dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⋮"
+                android:textColor="@color/kiddo_muted"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
 
+    <!-- ===== Barre repliée en bordure ===== -->
     <TextView
         android:id="@+id/collapsedStrip"
-        android:layout_width="22dp"
-        android:layout_height="64dp"
+        android:layout_width="40dp"
+        android:layout_height="116dp"
         android:background="@drawable/collapsed_strip_bg"
+        android:elevation="14dp"
         android:gravity="center"
         android:text="⋮"
         android:textColor="@color/kiddo_white"
+        android:textSize="24sp"
         android:textStyle="bold"
-        android:elevation="12dp"
         android:visibility="gone" />
 
 </com.kiddo.autotapper.DraggableToolbar>

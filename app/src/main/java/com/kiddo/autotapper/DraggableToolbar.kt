@@ -3,14 +3,19 @@ package com.kiddo.autotapper
 import android.content.Context
 import android.util.AttributeSet
 import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
 import android.widget.LinearLayout
 import kotlin.math.abs
 
 /**
  * Toolbar flottante entièrement déplaçable, tout en gardant les boutons à
- * l'intérieur parfaitement cliquables. Principe : on ne décide "c'est un
- * glissement" qu'une fois un vrai mouvement détecté (au-delà d'un petit
- * seuil) — avant ça, on laisse les boutons recevoir le clic normalement.
+ * l'intérieur parfaitement cliquables.
+ *
+ * - le seuil de glissement est en dp (plus de déclenchement parasite sur
+ *   écrans haute densité)
+ * - un retour haptique marque le début du glissement
+ * - un léger "enfoncement" visuel accompagne le drag
  */
 class DraggableToolbar @JvmOverloads constructor(
     context: Context,
@@ -26,7 +31,7 @@ class DraggableToolbar @JvmOverloads constructor(
     private var lastRawX = 0f
     private var lastRawY = 0f
     private var dragging = false
-    private val dragThresholdPx = 14
+    private val dragThresholdPx = (DRAG_THRESHOLD_DP * resources.displayMetrics.density)
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         when (ev.actionMasked) {
@@ -41,6 +46,7 @@ class DraggableToolbar @JvmOverloads constructor(
                 val dy = ev.rawY - downRawY
                 if (abs(dx) > dragThresholdPx || abs(dy) > dragThresholdPx) {
                     dragging = true
+                    performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK)
                     onDragStart?.invoke()
                     return true // à partir d'ici, c'est un glissement : on prend la main
                 }
@@ -68,5 +74,9 @@ class DraggableToolbar @JvmOverloads constructor(
             }
         }
         return true
+    }
+
+    companion object {
+        private const val DRAG_THRESHOLD_DP = 8f
     }
 }

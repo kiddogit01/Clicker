@@ -1,118 +1,317 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/kiddo_bg"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="⚙️ Configuration"
-        android:textColor="@color/kiddo_white"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="8dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Règle la vitesse, puis démarre la bulle."
-        android:textColor="@color/kiddo_muted"
-        android:textSize="13sp"
-        android:layout_marginBottom="32dp" />
+    android:background="@drawable/bg_gradient"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/step_card_background"
-        android:padding="20dp"
-        android:layout_marginBottom="24dp">
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="36dp"
+        android:paddingBottom="28dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Intervalle entre chaque tap"
-            android:textColor="@color/kiddo_white"
-            android:textSize="14sp"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Minimum : 50 ms — 100 ms recommandé"
-            android:textColor="@color/kiddo_muted"
-            android:textSize="11sp"
-            android:layout_marginBottom="12dp" />
-
+        <!-- ===== Barre supérieure ===== -->
         <LinearLayout
+            android:id="@+id/topBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/etInterval"
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:background="@drawable/step_card_background"
+                android:contentDescription="Retour"
+                android:backgroundTint="@null"
+                android:padding="9dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_back" />
+
+            <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:inputType="number"
-                android:text="100"
-                android:textColor="@color/kiddo_white"
-                android:background="#2A2B3A"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp" />
+                android:layout_marginStart="14dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Configuration"
+                    android:textColor="@color/kiddo_white"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Régle la vitesse, puis lance la cible."
+                    android:textColor="@color/kiddo_muted"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/imgLogoSmall"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@mipmap/ic_launcher" />
+        </LinearLayout>
+
+        <!-- ===== Carte intervalle ===== -->
+        <LinearLayout
+            android:id="@+id/cardInterval"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/step_card_background"
+            android:orientation="vertical"
+            android:padding="20dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ms"
+                android:text="Intervalle entre chaque tap"
+                android:textColor="@color/kiddo_white"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvIntervalValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="12dp"
+                android:text="100 ms"
+                android:textColor="@color/kiddo_cyan"
+                android:textSize="40sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvIntervalHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="2dp"
+                android:text="millisecondes entre chaque appui"
                 android:textColor="@color/kiddo_muted"
-                android:layout_marginStart="10dp" />
+                android:textSize="11sp" />
+
+            <SeekBar
+                android:id="@+id/seekInterval"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="10dp"
+                android:max="950"
+                android:progress="50"
+                android:progressTint="@color/kiddo_cyan"
+                android:thumbTint="@color/kiddo_pink" />
+
+            <LinearLayout
+                android:id="@+id/chipsRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/chip50"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="4dp"
+                    android:background="@drawable/chip_bg"
+                    android:gravity="center"
+                    android:minWidth="56dp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:text="50"
+                    android:textColor="@color/kiddo_white"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/chip100"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/chip_bg"
+                    android:gravity="center"
+                    android:minWidth="56dp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:text="100"
+                    android:textColor="@color/kiddo_white"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/chip250"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/chip_bg"
+                    android:gravity="center"
+                    android:minWidth="56dp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:text="250"
+                    android:textColor="@color/kiddo_white"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/chip500"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/chip_bg"
+                    android:gravity="center"
+                    android:minWidth="56dp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:text="500"
+                    android:textColor="@color/kiddo_white"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/chip1000"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/chip_bg"
+                    android:gravity="center"
+                    android:minWidth="56dp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:text="1000"
+                    android:textColor="@color/kiddo_white"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:text="Minimum : 50 ms — 100 ms recommandé"
+                android:textColor="@color/kiddo_muted"
+                android:textSize="10sp" />
         </LinearLayout>
+
+        <!-- ===== Carte batterie ===== -->
+        <LinearLayout
+            android:id="@+id/cardBattery"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/step_card_background"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tvBatteryIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:text="🔋"
+                android:textSize="20sp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvBatteryTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Batterie : non protégée"
+                    android:textColor="@color/kiddo_yellow"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvBatteryDesc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="L'OS peut arrêter la bulle en arrière-plan"
+                    android:textColor="@color/kiddo_muted"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnBattery"
+                android:layout_width="wrap_content"
+                android:minHeight="0dp"
+                android:layout_height="36dp"
+                android:background="@drawable/btn_ghost"
+                android:gravity="center"
+                android:minWidth="0dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="Exempter"
+                android:textAllCaps="false"
+                android:textColor="@color/kiddo_cyan"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- ===== CTA ===== -->
+        <Button
+            android:id="@+id/btnToggleTapper"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginTop="22dp"
+            android:background="@drawable/btn_primary_bg"
+            android:text="🎯  Lancer la cible et les contrôles"
+            android:textAllCaps="false"
+            android:textColor="@color/kiddo_white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvConfigStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:text="Deux éléments vont apparaître par-dessus tes autres apps : la cible (à glisser où tu veux taper) et la barre de contrôle."
+            android:textColor="@color/kiddo_muted"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btnSettings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/btn_ghost"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="⚙️  Style de la cible"
+            android:textAllCaps="false"
+            android:textColor="@color/kiddo_muted"
+            android:textSize="13sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="22dp"
+            android:text="KidCliker - ❖GAME Lv-UP ©2026"
+            android:textColor="@color/kiddo_footer"
+            android:textSize="10sp" />
+
     </LinearLayout>
-
-    <Button
-        android:id="@+id/btnToggleTapper"
-        android:layout_width="match_parent"
-        android:layout_height="58dp"
-        android:text="🎯 Lancer la cible et les contrôles"
-        android:textAllCaps="false"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:textColor="@color/kiddo_white"
-        android:background="@drawable/btn_primary_bg"
-        android:layout_marginBottom="16dp" />
-
-    <TextView
-        android:id="@+id/tvConfigStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="@color/kiddo_muted"
-        android:textSize="12sp"
-        android:gravity="center"
-        android:lineSpacingExtra="4dp"
-        android:text="Deux éléments vont apparaître par-dessus tes autres apps : un rond (la cible, à glisser où tu veux taper) et une barre séparée (Démarrer/Arrêter, position fixe)." />
-
-    <Button
-        android:id="@+id/btnSettings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="⚙️ Style de la cible"
-        android:textAllCaps="false"
-        android:textColor="@color/kiddo_muted"
-        android:background="@android:color/transparent" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="KidCliker - ❖GAME Lv-UP ©2026"
-        android:textColor="#4A4B5A"
-        android:textSize="10sp" />
-
-</LinearLayout>
+</ScrollView>

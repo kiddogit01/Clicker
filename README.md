@@ -32,7 +32,7 @@ manuellement :
 
 1. Dans l'onglet **Actions**, clique sur l'exécution terminée (coche verte ✅)
 2. Tout en bas de la page, section **Artifacts** → télécharge
-   `AutoTapper-debug-apk` (fichier .zip contenant l'APK)
+   `KidCliker-debug-apk` (fichier .zip contenant l'APK)
 3. Dézippe sur ton téléphone, tu obtiens `app-debug.apk`
 4. Installe-le (Android demandera d'autoriser "l'installation depuis des
    sources inconnues" la première fois — normal, l'app ne vient pas du

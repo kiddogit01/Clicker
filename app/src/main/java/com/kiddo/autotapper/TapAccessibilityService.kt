@@ -5,6 +5,7 @@ import android.accessibilityservice.GestureDescription
 import android.graphics.Path
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 
 /**
@@ -13,24 +14,37 @@ import android.view.accessibility.AccessibilityEvent
  *
  * Point important documenté par Android lui-même : dispatchGesture() annule
  * TOUT geste en cours au moment où il est appelé — y compris un geste de
- * l'utilisateur (glisser la barre de contrôle, par exemple). C'est pour ça
- * qu'on met le tapotage en pause via setUserInteracting() pendant que
- * l'utilisateur touche un des éléments flottants : aucun tap n'est envoyé
- * pendant ce court instant, donc son geste n'est jamais coupé.
+ * l'utilisateur (glisser la barre de contrôle). C'est pour ça qu'on met le
+ * tapotage en pause via setUserInteracting() pendant que l'utilisateur touche
+ * un des éléments flottants : aucun tap n'est envoyé pendant ce court instant,
+ * donc son geste n'est jamais coupé.
+ *
+ * Robustesse : si dispatchGesture ne rappelle jamais (bug OS rare), un
+ * watchdog remet isDispatching à false après 1,5 s — les taps repartent tout
+ * seuls au lieu de se figer définitivement.
  */
 class TapAccessibilityService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var isTapping = false
     private var isDispatching = false
+    private var dispatchStartedAt = 0L
     private var userInteracting = false
     private var tapX = 0f
     private var tapY = 0f
     private var intervalMs = 100L
 
+    /** Notifie la barre flottante que l'état démarré/arrêté a changé. */
+    var onRunningChanged: ((Boolean) -> Unit)? = null
+
     private val tapRunnable = object : Runnable {
         override fun run() {
             if (!isTapping) return
+            if (isDispatching &&
+                SystemClock.uptimeMillis() - dispatchStartedAt > DISPATCH_TIMEOUT_MS
+            ) {
+                isDispatching = false // watchdog
+            }
             if (!isDispatching && !userInteracting) performTap(tapX, tapY)
             handler.postDelayed(this, intervalMs)
         }
@@ -56,12 +70,15 @@ class TapAccessibilityService : AccessibilityService() {
         if (isTapping) return
         isTapping = true
         handler.post(tapRunnable)
+        onRunningChanged?.invoke(true)
     }
 
     fun stopTapping() {
+        val was = isTapping
         isTapping = false
         isDispatching = false
         handler.removeCallbacks(tapRunnable)
+        if (was) onRunningChanged?.invoke(false)
     }
 
     fun updatePosition(x: Float, y: Float) {
@@ -82,6 +99,7 @@ class TapAccessibilityService : AccessibilityService() {
         val gesture = GestureDescription.Builder().addStroke(stroke).build()
 
         isDispatching = true
+        dispatchStartedAt = SystemClock.uptimeMillis()
         val accepted = dispatchGesture(gesture, object : GestureResultCallback() {
             override fun onCompleted(gestureDescription: GestureDescription?) {
                 isDispatching = false
@@ -99,6 +117,7 @@ class TapAccessibilityService : AccessibilityService() {
     companion object {
         const val MIN_INTERVAL_MS = 50L
         const val RECOMMENDED_INTERVAL_MS = 100L
+        private const val DISPATCH_TIMEOUT_MS = 1500L
         var instance: TapAccessibilityService? = null
     }
 }

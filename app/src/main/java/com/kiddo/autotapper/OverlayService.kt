@@ -1,26 +1,44 @@
 package com.kiddo.autotapper
 
+import android.animation.ValueAnimator
 import android.app.Service
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.OvershootInterpolator
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 
+/**
+ * Fenêtres flottantes : la cible à glisser + la barre de contrôle.
+ *
+ * Nouveautés / corrections :
+ *  - nettoyage robuste : si un des deux overlays échoue à s'ajouter, l'autre
+ *    est quand même retiré (plus de bulle fantôme bloquée à l'écran)
+ *  - toutes les positions sont en dp (plus de décalages selon la densité)
+ *  - entrée des bulles animée (ressort), aimantation aux bords ANIMÉE
+ *  - barre de contrôle : expansion/repli animés, pulse sur le bouton quand ça
+ *    tourne, affichage de l'intervalle, retour haptique au drag
+ *  - position de la cible mémorisée
+ */
 class OverlayService : Service() {
 
     private lateinit var windowManager: WindowManager
-    private lateinit var targetView: View
-    private lateinit var controlView: View
-    private lateinit var targetParams: WindowManager.LayoutParams
-    private lateinit var controlParams: WindowManager.LayoutParams
+    private var targetView: View? = null
+    private var controlView: View? = null
+    private var targetParams: WindowManager.LayoutParams? = null
+    private var controlParams: WindowManager.LayoutParams? = null
+
     private var startInterval: Long = TapAccessibilityService.RECOMMENDED_INTERVAL_MS
     private var collapsed = false
     private var controlWidthExpanded = 0
@@ -30,14 +48,36 @@ class OverlayService : Service() {
     private var fingertipXRatio = 0.5f
     private var fingertipYRatio = 0.22f
 
+    private val handler = Handler(Looper.getMainLooper())
+    private var pulseAnimator: ValueAnimator? = null
+    private var togglePulse: ValueAnimator? = null
+    private var snapAnimator: ValueAnimator? = null
+
+    private val prefs get() = getSharedPreferences("kiddo_autotapper", MODE_PRIVATE)
+
+    private val refreshRunnable = object : Runnable {
+        override fun run() {
+            if (!overlaysReady) return
+            refreshToggle()
+            handler.postDelayed(this, REFRESH_PERIOD_MS)
+        }
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startInterval = intent?.getLongExtra("interval", TapAccessibilityService.RECOMMENDED_INTERVAL_MS)
-            ?: TapAccessibilityService.RECOMMENDED_INTERVAL_MS
+        val fromIntent = intent?.getLongExtra("interval", -1L) ?: -1L
+        startInterval = if (fromIntent > 0) {
+            prefs.edit().putLong("interval_ms", fromIntent).apply()
+            fromIntent
+        } else {
+            // Redémarrage sticky (intent nul) : on reprend la dernière valeur.
+            prefs.getLong("interval_ms", TapAccessibilityService.RECOMMENDED_INTERVAL_MS)
+        }
+
         // On repart toujours d'une base propre : si l'utilisateur a changé le
         // style de cible dans les réglages entre-temps, ça doit se voir
-        // immédiatement au prochain lancement, pas rester bloqué sur l'ancien.
+        // immédiatement au prochain lancement.
         teardownOverlays()
         initOverlay()
         return START_STICKY
@@ -49,18 +89,48 @@ class OverlayService : Service() {
             setupTarget()
             setupControl()
             overlaysReady = true
-            Toast.makeText(this, "👆 Glisse la cible, puis appuie sur Démarrer", Toast.LENGTH_LONG).show()
+            animateEntrance()
+            startTargetPulse()
+            handler.postDelayed(refreshRunnable, REFRESH_PERIOD_MS)
+            Toast.makeText(
+                this, "👆 Glisse la cible, puis appuie sur Démarrer",
+                Toast.LENGTH_LONG
+            ).show()
         } catch (e: Exception) {
-            Toast.makeText(this, "❌ Erreur : " + (e.message ?: e.toString()), Toast.LENGTH_LONG).show()
+            // Correction fuite : on retire TOUT ce qui a pu être ajouté avant
+            // l'échec (avant, la cible restait bloquée à l'écran pour toujours).
+            teardownOverlays()
+            Toast.makeText(
+                this, "❌ Erreur : " + (e.message ?: e.toString()),
+                Toast.LENGTH_LONG
+            ).show()
             stopSelf()
         }
     }
 
     private fun teardownOverlays() {
-        if (!overlaysReady) return
-        TapAccessibilityService.instance?.stopTapping()
-        if (::targetView.isInitialized) { try { windowManager.removeView(targetView) } catch (_: Exception) {} }
-        if (::controlView.isInitialized) { try { windowManager.removeView(controlView) } catch (_: Exception) {} }
+        handler.removeCallbacks(refreshRunnable)
+        pulseAnimator?.cancel(); pulseAnimator = null
+        togglePulse?.cancel(); togglePulse = null
+        snapAnimator?.cancel(); snapAnimator = null
+
+        if (overlaysReady) TapAccessibilityService.instance?.stopTapping()
+        // Toujours détacher le listener (même en cas d'échec partiel du setup)
+        // pour ne pas figer une référence vers ce Service.
+        TapAccessibilityService.instance?.onRunningChanged = null
+
+        targetView?.let { v ->
+            v.animate().cancel()
+            try { windowManager.removeView(v) } catch (_: Exception) {}
+        }
+        controlView?.let { v ->
+            v.animate().cancel()
+            try { windowManager.removeView(v) } catch (_: Exception) {}
+        }
+        targetView = null
+        controlView = null
+        targetParams = null
+        controlParams = null
         overlaysReady = false
     }
 
@@ -69,29 +139,99 @@ class OverlayService : Service() {
         teardownOverlays()
     }
 
+    // ---------- Outils ----------
+
+    private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
+
     private fun overlayType(): Int =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         else
             @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
 
-    private fun fingertipX() = targetParams.x + targetView.width * fingertipXRatio
-    private fun fingertipY() = targetParams.y + targetView.height * fingertipYRatio
+    private fun fingertipX(): Float =
+        (targetParams?.x ?: 0) + (targetView?.width ?: 0) * fingertipXRatio
+
+    private fun fingertipY(): Float =
+        (targetParams?.y ?: 0) + (targetView?.height ?: 0) * fingertipYRatio
+
+    private fun animateEntrance() {
+        targetView?.let {
+            it.alpha = 0f; it.scaleX = 0.55f; it.scaleY = 0.55f
+            it.animate().alpha(1f).scaleX(1f).scaleY(1f)
+                .setDuration(480)
+                .setInterpolator(OvershootInterpolator(2f))
+                .start()
+        }
+        controlView?.let {
+            it.alpha = 0f; it.scaleX = 0.6f; it.scaleY = 0.6f
+            it.animate().alpha(1f).scaleX(1f).scaleY(1f)
+                .setStartDelay(120)
+                .setDuration(460)
+                .setInterpolator(OvershootInterpolator(1.8f))
+                .start()
+        }
+    }
+
+    /** Halo qui respire autour de la cible. */
+    private fun startTargetPulse() {
+        val ring = targetView?.findViewById<View>(R.id.pulseRing) ?: return
+        val anim = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = 1500
+            repeatMode = ValueAnimator.REVERSE
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = AccelerateDecelerateInterpolator()
+            addUpdateListener { a ->
+                val t = a.animatedValue as Float
+                val s = 1f + 0.38f * t
+                ring.scaleX = s; ring.scaleY = s
+                ring.alpha = 0.85f * (1f - t)
+            }
+        }
+        pulseAnimator = anim
+        anim.start()
+    }
+
+    /** Translation horizontale animée de la barre (aimantation aux bords). */
+    private fun animateControlX(toX: Int) {
+        val params = controlParams ?: return
+        val view = controlView ?: return
+        val from = params.x
+        if (from == toX) return
+        snapAnimator?.cancel()
+        val anim = ValueAnimator.ofInt(from, toX).apply {
+            duration = 280
+            interpolator = OvershootInterpolator(1.15f)
+            addUpdateListener { a ->
+                params.x = a.animatedValue as Int
+                try { windowManager.updateViewLayout(view, params) } catch (_: Exception) {}
+            }
+        }
+        snapAnimator = anim
+        anim.start()
+    }
 
     // ---------- Cible ----------
 
     private fun setupTarget() {
-        val prefs = getSharedPreferences("kiddo_autotapper", MODE_PRIVATE)
         val useCircle = prefs.getString("target_style", "finger") == "circle"
 
-        targetView = LayoutInflater.from(this).inflate(
+        val view = LayoutInflater.from(this).inflate(
             if (useCircle) R.layout.overlay_target_circle else R.layout.overlay_target, null
         )
+        targetView = view
         fingertipXRatio = 0.5f
         fingertipYRatio = if (useCircle) 0.5f else 0.22f
 
         val metrics = resources.displayMetrics
-        targetParams = WindowManager.LayoutParams(
+        val defaultX = metrics.widthPixels / 2 - dp(36)
+        val defaultY = metrics.heightPixels / 2 - dp(90)
+        val savedX = prefs.getInt("target_x", defaultX)
+            .coerceIn(-dp(30), metrics.widthPixels - dp(30))
+        val savedY = prefs.getInt("target_y", defaultY)
+            .coerceIn(-dp(30), metrics.heightPixels - dp(30))
+
+        val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             overlayType(),
@@ -99,35 +239,40 @@ class OverlayService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = metrics.widthPixels / 2 - 100
-            y = metrics.heightPixels / 2 - 200
+            x = savedX
+            y = savedY
         }
-
-        windowManager.addView(targetView, targetParams)
+        targetParams = params
+        windowManager.addView(view, params)
 
         var initialX = 0; var initialY = 0
         var initialTouchX = 0f; var initialTouchY = 0f
 
-        targetView.setOnTouchListener { _, event ->
+        view.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     // Coupe le tapotage le temps du glissement : dispatchGesture()
                     // annule sinon ce geste en cours de route (comportement
                     // documenté par Android, pas un bug de l'app).
                     TapAccessibilityService.instance?.setUserInteracting(true)
-                    initialX = targetParams.x; initialY = targetParams.y
+                    initialX = params.x; initialY = params.y
                     initialTouchX = event.rawX; initialTouchY = event.rawY
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    targetParams.x = initialX + (event.rawX - initialTouchX).toInt()
-                    targetParams.y = initialY + (event.rawY - initialTouchY).toInt()
-                    windowManager.updateViewLayout(targetView, targetParams)
+                    params.x = initialX + (event.rawX - initialTouchX).toInt()
+                    params.y = initialY + (event.rawY - initialTouchY).toInt()
+                    try { windowManager.updateViewLayout(view, params) } catch (_: Exception) {}
                     TapAccessibilityService.instance?.updatePosition(fingertipX(), fingertipY())
                     true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     TapAccessibilityService.instance?.setUserInteracting(false)
+                    // Mémorise la position pour le prochain lancement
+                    prefs.edit()
+                        .putInt("target_x", params.x)
+                        .putInt("target_y", params.y)
+                        .apply()
                     true
                 }
                 else -> false
@@ -135,13 +280,14 @@ class OverlayService : Service() {
         }
     }
 
-    // ---------- Barre de contrôle (glissable, repli en bordure) ----------
+    // ---------- Barre de contrôle (glissable, repli en bordure animé) ----------
 
     private fun setupControl() {
-        controlView = LayoutInflater.from(this).inflate(R.layout.overlay_control, null)
+        val view = LayoutInflater.from(this).inflate(R.layout.overlay_control, null)
+        controlView = view
 
         val metrics = resources.displayMetrics
-        controlParams = WindowManager.LayoutParams(
+        val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             overlayType(),
@@ -149,17 +295,23 @@ class OverlayService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = 40
-            y = metrics.heightPixels - 300
+            x = dp(16)
+            y = metrics.heightPixels - dp(260)
         }
+        controlParams = params
 
-        val toolbar = controlView as DraggableToolbar
-        val expandedRow = controlView.findViewById<View>(R.id.expandedRow)
-        val collapsedStrip = controlView.findViewById<TextView>(R.id.collapsedStrip)
-        val btnToggle = controlView.findViewById<Button>(R.id.btnToggle)
-        val btnQuit = controlView.findViewById<Button>(R.id.btnQuit)
+        val toolbar = view as DraggableToolbar
+        val expandedRow = view.findViewById<View>(R.id.expandedRow)
+        val collapsedStrip = view.findViewById<TextView>(R.id.collapsedStrip)
+        val btnToggle = view.findViewById<Button>(R.id.btnToggle)
+        val btnQuit = view.findViewById<Button>(R.id.btnQuit)
+        val tvInterval = view.findViewById<TextView>(R.id.tvInterval)
 
-        controlView.post {
+        btnToggle.clearTint()
+        btnQuit.clearTint()
+        tvInterval.text = "$startInterval ms"
+
+        view.post {
             controlWidthExpanded = expandedRow.width
             controlWidthCollapsed = collapsedStrip.layoutParams.width
         }
@@ -167,56 +319,96 @@ class OverlayService : Service() {
         fun expand() {
             collapsed = false
             expandedRow.visibility = View.VISIBLE
-            collapsedStrip.visibility = View.GONE
+            expandedRow.alpha = 0f
+            expandedRow.scaleX = 0.8f; expandedRow.scaleY = 0.8f
+            expandedRow.animate().alpha(1f).scaleX(1f).scaleY(1f)
+                .setDuration(240)
+                .setInterpolator(OvershootInterpolator(2f))
+                .start()
+            collapsedStrip.animate().alpha(0f).scaleX(0.75f).scaleY(0.75f)
+                .setDuration(130)
+                .withEndAction {
+                    collapsedStrip.visibility = View.GONE
+                    // Remet la barre entière dans l'écran si elle en déborde
+                    view.post {
+                        val w = if (controlWidthExpanded > 0) controlWidthExpanded else view.width
+                        val p = controlParams ?: return@post
+                        if (p.x + w > metrics.widthPixels) p.x = metrics.widthPixels - w
+                        if (p.x < 0) p.x = 0
+                        try { windowManager.updateViewLayout(view, p) } catch (_: Exception) {}
+                    }
+                }
+                .start()
         }
 
         fun collapseToEdge(rightSide: Boolean) {
             collapsed = true
-            expandedRow.visibility = View.GONE
-            collapsedStrip.visibility = View.VISIBLE
-            val w = if (controlWidthCollapsed > 0) controlWidthCollapsed else 60
-            controlParams.x = if (rightSide) metrics.widthPixels - w else 0
-            windowManager.updateViewLayout(controlView, controlParams)
+            expandedRow.animate().alpha(0f).scaleX(0.8f).scaleY(0.8f)
+                .setDuration(130)
+                .withEndAction {
+                    expandedRow.visibility = View.GONE
+                    collapsedStrip.visibility = View.VISIBLE
+                    collapsedStrip.alpha = 0f
+                    collapsedStrip.scaleX = 0.75f; collapsedStrip.scaleY = 0.75f
+                    collapsedStrip.animate().alpha(1f).scaleX(1f).scaleY(1f)
+                        .setDuration(220)
+                        .setInterpolator(OvershootInterpolator(2.2f))
+                        .start()
+                }
+                .start()
+            val w = if (controlWidthCollapsed > 0) controlWidthCollapsed else dp(40)
+            animateControlX(if (rightSide) metrics.widthPixels - w else 0)
         }
 
         collapsedStrip.setOnClickListener { expand() }
 
         // Même principe que pour la cible : pas de tap auto pendant le glissement.
-        toolbar.onDragStart = { TapAccessibilityService.instance?.setUserInteracting(true) }
+        toolbar.onDragStart = {
+            snapAnimator?.cancel()
+            TapAccessibilityService.instance?.setUserInteracting(true)
+            view.animate().scaleX(0.965f).scaleY(0.965f)
+                .setDuration(130).start()
+        }
         toolbar.onDrag = { dx, dy ->
-            controlParams.x += dx
-            controlParams.y += dy
-            windowManager.updateViewLayout(controlView, controlParams)
+            controlParams?.let { p ->
+                p.x += dx
+                p.y += dy
+                try { windowManager.updateViewLayout(view, p) } catch (_: Exception) {}
+            }
         }
         toolbar.onDragEnd = {
             TapAccessibilityService.instance?.setUserInteracting(false)
+            view.animate().scaleX(1f).scaleY(1f)
+                .setDuration(220)
+                .setInterpolator(OvershootInterpolator(2.2f))
+                .start()
             if (!collapsed) {
-                val w = if (controlWidthExpanded > 0) controlWidthExpanded else 200
-                val edgeMargin = 60
-                val centerX = controlParams.x + w / 2
-                if (centerX < metrics.widthPixels / 2 && controlParams.x < edgeMargin) {
-                    collapseToEdge(rightSide = false)
-                } else if (centerX >= metrics.widthPixels / 2 &&
-                    controlParams.x + w > metrics.widthPixels - edgeMargin
-                ) {
-                    collapseToEdge(rightSide = true)
+                val w = if (controlWidthExpanded > 0) controlWidthExpanded else view.width
+                val edgeMargin = dp(8)
+                controlParams?.let { p ->
+                    val centerX = p.x + w / 2
+                    when {
+                        centerX < metrics.widthPixels / 2 && p.x < edgeMargin ->
+                            animateControlX(0)
+                        centerX >= metrics.widthPixels / 2 &&
+                            p.x + w > metrics.widthPixels - edgeMargin ->
+                            animateControlX(metrics.widthPixels - w)
+                    }
                 }
             }
         }
 
-        fun refreshToggle() {
-            val running = TapAccessibilityService.instance?.isRunning() == true
-            btnToggle.text = if (running) "⏸ Arrêter" else "▶ Démarrer"
-            btnToggle.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                resources.getColor(if (running) R.color.kiddo_pink else R.color.kiddo_green, theme)
-            )
+        // Rafraîchit l'état du bouton : démarré / arrêté (aussi si le service
+        // d'accessibilité est désactivé depuis les réglages système).
+        TapAccessibilityService.instance?.onRunningChanged = {
+            handler.post { if (overlaysReady) refreshToggle() }
         }
-        refreshToggle()
 
         btnToggle.setOnClickListener {
             val service = TapAccessibilityService.instance
             if (service == null) {
                 Toast.makeText(this, "⚠️ Service d'accessibilité non actif", Toast.LENGTH_SHORT).show()
+                refreshToggle()
                 return@setOnClickListener
             }
             if (service.isRunning()) service.stopTapping()
@@ -226,9 +418,55 @@ class OverlayService : Service() {
 
         btnQuit.setOnClickListener {
             TapAccessibilityService.instance?.stopTapping()
-            stopSelf()
+            // Sortie animée avant de tuer le service
+            targetView?.animate()?.alpha(0f)?.scaleX(0.7f)?.scaleY(0.7f)
+                ?.setDuration(170)?.start()
+            view.animate().alpha(0f).scaleX(0.7f).scaleY(0.7f)
+                .setDuration(170)
+                .withEndAction { stopSelf() }
+                .start()
         }
 
-        windowManager.addView(controlView, controlParams)
+        windowManager.addView(view, params)
+        refreshToggle()
+    }
+
+    /** Petit "battement" du bouton quand le tap tourne. */
+    private fun startTogglePulse(btn: Button) {
+        if (togglePulse?.isStarted == true) return
+        val anim = ValueAnimator.ofFloat(1f, 1.05f).apply {
+            duration = 550
+            repeatMode = ValueAnimator.REVERSE
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = AccelerateDecelerateInterpolator()
+            addUpdateListener { a ->
+                val s = a.animatedValue as Float
+                btn.scaleX = s; btn.scaleY = s
+            }
+        }
+        togglePulse = anim
+        anim.start()
+    }
+
+    private fun stopTogglePulse(btn: Button) {
+        togglePulse?.cancel()
+        togglePulse = null
+        btn.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
+    }
+
+    private fun refreshToggle() {
+        // Utilisé par la boucle de refresh périodique.
+        val view = controlView ?: return
+        val btn = view.findViewById<Button>(R.id.btnToggle) ?: return
+        val running = TapAccessibilityService.instance?.isRunning() == true
+        btn.text = if (running) "⏸ Arrêter" else "▶ Démarrer"
+        btn.setBackgroundResource(
+            if (running) R.drawable.btn_pill_pink else R.drawable.btn_pill_green
+        )
+        if (running) startTogglePulse(btn) else stopTogglePulse(btn)
+    }
+
+    companion object {
+        private const val REFRESH_PERIOD_MS = 1200L
     }
 }

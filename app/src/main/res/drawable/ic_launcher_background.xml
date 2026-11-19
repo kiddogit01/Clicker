@@ -1,10 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:pathData="M0,0h108v108h-108z"
-        android:fillColor="#FF007F" />
+
+    <!-- Fond dégradé sombre -->
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0" android:startY="0"
+                android:endX="108" android:endY="108"
+                android:startColor="#171828"
+                android:endColor="#080912" />
+        </aapt:attr>
+    </path>
+
+    <!-- Halo rose (haut-gauche) -->
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="14" android:centerY="12"
+                android:gradientRadius="54"
+                android:startColor="#80FF007F"
+                android:endColor="#00FF007F" />
+        </aapt:attr>
+    </path>
+
+    <!-- Halo cyan (bas-droite) -->
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="94" android:centerY="96"
+                android:gradientRadius="56"
+                android:startColor="#6600F0FF"
+                android:endColor="#0000F0FF" />
+        </aapt:attr>
+    </path>
 </vector>

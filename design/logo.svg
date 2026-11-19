@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#171828"/>
+      <stop offset="0.55" stop-color="#0D0E15"/>
+      <stop offset="1" stop-color="#08090E"/>
+    </linearGradient>
+    <radialGradient id="glowPink" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FF007F" stop-opacity="0.50"/>
+      <stop offset="1" stop-color="#FF007F" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowCyan" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#00F0FF" stop-opacity="0.40"/>
+      <stop offset="1" stop-color="#00F0FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowGreen" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#00FF88" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#00FF88" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="centerGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#00FF88" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#00FF88" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Fond -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="70" cy="60" r="270" fill="url(#glowPink)"/>
+  <circle cx="450" cy="460" r="280" fill="url(#glowCyan)"/>
+  <circle cx="256" cy="246" r="200" fill="url(#glowGreen)"/>
+
+  <!-- Onde de tap -->
+  <circle cx="256" cy="246" r="186" fill="none" stroke="#FF007F" stroke-opacity="0.35" stroke-width="8"/>
+
+  <!-- Cible néon -->
+  <circle cx="256" cy="246" r="148" fill="none" stroke="#FF007F" stroke-width="26"/>
+  <circle cx="256" cy="246" r="96" fill="none" stroke="#00F0FF" stroke-width="22"/>
+  <circle cx="256" cy="246" r="170" fill="url(#centerGlow)"/>
+  <circle cx="256" cy="246" r="58" fill="none" stroke="#FFFFFF" stroke-opacity="0.92" stroke-width="6"/>
+  <circle cx="256" cy="246" r="34" fill="#00FF88"/>
+
+  <!-- Curseur : ombre puis corps -->
+  <path d="M282,274 L282,391 L314.9,365.6 L333.1,405.4 L351.4,398.1 L333.1,354 L369.6,354 Z"
+        fill="#FF007F" opacity="0.55"/>
+  <path d="M272,262 L272,379 L304.9,353.6 L323.1,393.4 L341.4,386.1 L323.1,342 L359.6,342 Z"
+        fill="#FFFFFF" stroke="#0D0E15" stroke-width="7" stroke-linejoin="round"/>
+</svg>
