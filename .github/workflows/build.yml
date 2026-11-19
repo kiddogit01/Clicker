@@ -85,14 +85,13 @@ jobs:
             git commit -m "APK: build ${{ github.sha }}" || true
             git push origin "HEAD:${{ github.ref }}"
           fi
-          # 2) Release roulante → lien de téléchargement stable pour le téléphone
-          gh release view latest-apk >/dev/null 2>&1 || \
-            gh release create latest-apk \
-              --title "KidCliker — APK de test" \
+          # 2) Release versionnée → lien de téléchargement pour le téléphone.
+          #    (Les releases GitHub sont immuables : l'asset doit être ajouté
+          #     À LA CRÉATION, d'où une release par build.)
+          TAG="apk-${{ github.run_number }}"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" release/KidCliker-debug.apk \
+              --title "KidCliker — APK build ${{ github.run_number }}" \
               --notes "Build de test automatisé. Installe sur ton Android (autoriser les sources inconnues)."
-          if ! gh release upload latest-apk release/KidCliker-debug.apk --clobber 2>upload.err; then
-            echo "::error title=Upload release échoué::$(tr '\n' ' ' < upload.err)"
-            cat upload.err
-            exit 1
           fi
-          echo "::notice title=APK publié::https://github.com/kiddogit01/Clicker/releases/download/latest-apk/KidCliker-debug.apk"
+          echo "::notice title=APK publié::https://github.com/kiddogit01/Clicker/releases/download/$TAG/KidCliker-debug.apk"
